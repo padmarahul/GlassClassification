@@ -1,0 +1,3 @@
+[submodule "glassclassification-frontend"]
+	path = glassclassification-frontend
+	url = https://github.com/padmarahul/glassclassification-frontend.git
