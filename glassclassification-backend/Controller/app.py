@@ -157,7 +157,7 @@ def getPairplots():
 # Endpoint to check the count of each class type
 @app.route('/ml/checkclasscounts', methods=['GET'])
 def check_class_counts():
-    types, counts = np.unique(data['Type'].values, return_counts=True)
+    types,counts = np.unique(data['Type'].values, return_counts=True)
 
     # Create a bar plot
     plt.bar(types, counts)
@@ -166,18 +166,18 @@ def check_class_counts():
     plt.ylabel("Count")
 
     # Save the plot to a BytesIO object
-    img_buffer = BytesIO()
-    plt.savefig(img_buffer, format='png')
-    img_buffer.seek(0)
+    img_buffer2 = BytesIO()
+    plt.savefig(img_buffer2, format='png')
+    img_buffer2.seek(0)
 
     # Send the image file directly
-    return Response(img_buffer.getvalue(), mimetype='image/png')
+    return Response(img_buffer2.getvalue(), mimetype='image/png')
 
 
 # API endpoint for box plot visualization
 @app.route('/ml/boxplot', methods=['GET'])
 def box_plot():
-    plt.figure(figsize=(15, 10))
+    plt.figure(figsize=(25, 15))
     plt.boxplot(cv_results_train.values(), labels=cv_results_train.keys())
     plt.xticks(rotation='vertical')
     plt.title("Comparing performance of different models")
@@ -210,6 +210,7 @@ def confusion_matrix_heatmap_train():
     return Response(img_buffer, mimetype='image/png')
 
 
+
 # API endpoint for confusion matrix heatmap
 @app.route('/ml/testconfusionmatrix', methods=['GET'])
 def confusion_matrix_heatmap_test():
@@ -220,7 +221,7 @@ def confusion_matrix_heatmap_test():
     # Plot confusion matrix heatmap
     plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, cmap='coolwarm', fmt='g')
-    plt.title("Train Confusion Matrix")
+    plt.title("Test Confusion Matrix")
 
     # Save the plot to a BytesIO object
     img_buffer = BytesIO()
