@@ -28,7 +28,7 @@ from flask_cors import CORS, cross_origin
 app = Flask(__name__)
 cors = CORS(app,resources={r'/ml/*': {'origins':['http://localhost:3000','https://main--glassclassificationanalysis090523.netlify.app']}})
 
-data = pd.read_csv("/home/dheerajreddymamidi/glassclassification/GlassClassification/glassclassification-backend/IntegrationTemplates/glass.csv")
+data = pd.read_csv('/var/tmp/IntegrationTemplates/glass.csv')
 plt.switch_backend('Agg')
 
 X, Y = data.iloc[:, :-1].values, data.iloc[:, -1].values
