@@ -8,3 +8,6 @@ flask_cors==3.0.10
 pandas== 2.0.0
 openpyxl==3.1.2
 scikit-learn==1.1.1
+seaborn==0.11.2
+matplotlib==3.5.1
+joblib==1.1.0
