@@ -22,13 +22,14 @@ import os.path
 import seaborn as sns
 import matplotlib.pyplot as plt
 from io import BytesIO
+from PIL import Image
 sys.path.append("..")
 from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 cors = CORS(app,resources={r'/ml/*': {'origins':['http://localhost:3000','https://main--glassclassificationanalysis090523.netlify.app']}})
 
-data = pd.read_csv('/var/tmp/IntegrationTemplates/glass.csv')
+data = pd.read_csv('/Users/sairahulpadma/Desktop/UNT/SPRING-2024/SDAI/GlassClassification/glassclassification-backend/glass.csv')
 plt.switch_backend('Agg')
 
 X, Y = data.iloc[:, :-1].values, data.iloc[:, -1].values
@@ -232,6 +233,35 @@ def confusion_matrix_heatmap_test():
     return Response(img_buffer, mimetype='image/png')
 
 
+
+@app.route('/ml/classify', methods=['POST'])
+def classify_image():
+    if 'file' not in request.files:
+        return "No file part", 400
+    file = request.files['file']
+    image = Image.open(BytesIO(file.read()))
+    print(image)
+    predicted_class=[]
+    predicted_class=['Tempered Glass','Gorilla Glass','Lead Glass']
+    return jsonify({"class": predicted_class})
+
+@app.route('/ml/classify-text', methods=['POST'])
+def classify_glass_from_text():
+    data = request.json
+    text_description = data.get('description', '')
+    # doc = nlp(text_description)
+    
+    # # Example: Extract features such as noun phrases or specific entities
+    # features = [chunk.text for chunk in doc.noun_chunks]
+
+    # # Classify glass based on extracted features
+    # glass_type = classify_glass(features)
+    key_characteristics=['Far Stronger','Regular Glass','Car Windows','Shower Doors','Small Granules','Sharp Shards']
+    glass_type=['Tempered Glass','Gorilla Glass','Lead Glass']
+    return jsonify({"class": glass_type,
+                    "key_characteristics": key_characteristics
+                    })
+    
 
 if __name__ == '__main__':
     app.run(debug=True, port=8001)
