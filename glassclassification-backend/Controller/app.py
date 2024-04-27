@@ -23,6 +23,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from io import BytesIO
 from PIL import Image
+import spacy
+import tensorflow as tf
 sys.path.append("..")
 from flask_cors import CORS, cross_origin
 
@@ -232,36 +234,80 @@ def confusion_matrix_heatmap_test():
     # Send the image file directly
     return Response(img_buffer, mimetype='image/png')
 
+# Load your trained model (replace with the path to your model)
+model = tf.keras.models.load_model('/Users/sairahulpadma/Desktop/UNT/SPRING-2024/SDAI/GlassClassification/glassclassification-backend/glass_type_classifier.h5')
 
-
-@app.route('/ml/classify', methods=['POST'])
+@app.route('/ml/classify-image', methods=['POST'])
 def classify_image():
     if 'file' not in request.files:
         return "No file part", 400
     file = request.files['file']
-    image = Image.open(BytesIO(file.read()))
-    print(image)
-    predicted_class=[]
-    predicted_class=['Tempered Glass','Gorilla Glass','Lead Glass']
-    return jsonify({"class": predicted_class})
+    # Make sure to read the image in the correct color mode if your model expects grayscale or RGB
+    image = Image.open(BytesIO(file.read())).convert('RGB')
+    
+    # Preprocess the image to fit your model's input requirements (size, shape, scaling, etc.)
+    image = image.resize((150, 150))  # Example size, change to what your model expects
+    image_array = np.expand_dims(np.array(image) / 255.0, axis=0)
+    
+    # Use the model to predict the class
+    predictions = model.predict(image_array)
+    print("ppp",predictions)
+    # Assuming your model outputs one prediction per class in the order of ['Tempered Glass', 'Gorilla Glass', 'Lead Glass']
+    predicted_classes = ['Gorilla Glass', 'Lead Glass', 'Tempered Glass']
+    predicted_class = predicted_classes[np.argmax(predictions)]
+    # Display predicted probabilities alongside class names
+    predicted_probabilities = dict(zip(predicted_classes, predictions))
+    # Output the predicted class with the highest probability and all class probabilities
+    return jsonify({
+    "predicted_class": predicted_class
+   # "probabilities": predicted_probabilities
+})
+
+# Load spaCy model
+nlp = spacy.load('en_core_web_sm')
+
+# Load the trained classifier and vectorizer
+classifier = joblib.load('/Users/sairahulpadma/Desktop/UNT/SPRING-2024/SDAI/GlassClassification/glassclassification-backend/trained_classifier.pkl')
+vectorizer = joblib.load('/Users/sairahulpadma/Desktop/UNT/SPRING-2024/SDAI/GlassClassification/glassclassification-backend/vectorizer.pkl')
+# Define a dictionary mapping glass types to key characteristics
+characteristics_map = {
+    'Tempered Glass': ['Far Stronger', 'Small Granules', 'Used in car windows'],
+    'Gorilla Glass': ['Scratch Resistant', 'Used in smartphones', 'Thin and light'],
+    'Lead Glass': ['High Refractive Index', 'Used in camera lenses', 'Denser than normal glass']
+}
+# Define a function for text preprocessing
+def preprocess_text(text):
+    doc = nlp(text)
+    return ' '.join(token.lemma_ for token in doc if not token.is_punct and not token.is_stop)
 
 @app.route('/ml/classify-text', methods=['POST'])
 def classify_glass_from_text():
     data = request.json
     text_description = data.get('description', '')
-    # doc = nlp(text_description)
-    
-    # # Example: Extract features such as noun phrases or specific entities
-    # features = [chunk.text for chunk in doc.noun_chunks]
+    # Preprocess the text
+    processed_text = preprocess_text(text_description)
 
-    # # Classify glass based on extracted features
-    # glass_type = classify_glass(features)
-    key_characteristics=['Far Stronger','Regular Glass','Car Windows','Shower Doors','Small Granules','Sharp Shards']
-    glass_type=['Tempered Glass','Gorilla Glass','Lead Glass']
-    return jsonify({"class": glass_type,
-                    "key_characteristics": key_characteristics
-                    })
+    # Vectorize the processed text
+    vectorized_text = vectorizer.transform([processed_text])
+
+    # Predict the glass type
+    prediction = classifier.predict(vectorized_text)
+    # Get the key characteristics for the predicted glass type
+    predicted_class = prediction[0]
+    key_characteristics = characteristics_map.get(predicted_class, ["No characteristics found"])
+
+        
+    # You can also output probabilities or other model outputs as needed
+    # probabilities = classifier.predict_proba(vectorized_text)
+
+    # Return the prediction as a JSON response
+    return jsonify({
+            "description": text_description,
+            "predicted_class": prediction[0],
+            "key_characteristics": key_characteristics
+        })
     
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8001)

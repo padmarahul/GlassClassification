@@ -30,7 +30,7 @@ warnings.filterwarnings("ignore")
 
 # Loading and having an initial look at the data
 
-data = pd.read_csv("/content/glass.csv")
+data = pd.read_csv("/Users/sairahulpadma/Desktop/UNT/SPRING-2024/SDAI/GlassClassification/glassclassification-backend/glass.csv ")
 data.head()
 
 # Having a look at statistics of each feature
